@@ -33,6 +33,7 @@ O *script* `codigo.py` gera as seguintes análises visuais:
 3.  **Motivos de Contato Mais Frequentes:** Nuvem de Palavras que destaca os temas mais recorrentes nos contatos recentes dos clientes.
 4.  **Ranking de Satisfação por Segmento:** Gráfico de Pontos (Dumbbell Plot) que exibe o índice médio de satisfação dos clientes, segmentado por área de atuação.
 5.  **Top 5 Serviços Mais Contratados:** Gráfico de Barras que ilustra a popularidade dos serviços oferecidos pela contabilidade.
+6.  **Top 5 Motivos de Contato:** G´rafico de Barras que ilustra a popularidade dos Motivos de Contato.
 
 ## 💻 Como Executar o Projeto
 
