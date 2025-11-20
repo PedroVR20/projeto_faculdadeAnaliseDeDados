@@ -66,8 +66,8 @@ O *script* carregará os dados e exibirá as quatro visualizações geradas.
 Este projeto foi desenvolvido por:
 
 *   **[Pedro Valim Rivera]** - Papel: Analista de Dados / Engenheiro de Dados
-*   **[Davi De Lima Martins ]** - Papel: Cientista de Dados / Pesquisador
-*   **[Erik Figueiredo]** - Papel: Especialista em Otimização e Entrega
+*   **[Erik Figueiredo]** - Papel: Cientista de Dados / Pesquisador
+*   **[Davi De Lima Martins]** - Papel: Especialista em Otimização e Entrega
 
 Sinta-se à vontade para sugerir melhorias ou reportar problemas.
 
