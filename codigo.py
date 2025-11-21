@@ -41,7 +41,7 @@ if 'df' in locals() and df is not None:
     # 2. Contar clientes por região
     contagem_regioes = df['Regiao'].value_counts()
 
-    # --- VOLTANDO COM AS CORES VIBRANTES ---
+    
     # 3. Definir a paleta de cores original e variada
     cores_vibrantes = ['#3498db', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6'] # Azul, Verde, Vermelho, Amarelo, Roxo
 
