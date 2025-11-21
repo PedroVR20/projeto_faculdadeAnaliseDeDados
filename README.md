@@ -51,8 +51,8 @@ pip install pandas openpyxl matplotlib seaborn wordcloud
 
 1.  Clone o repositório para sua máquina local:
     ```bash
-    git clone https://github.com/PedroVR20/projeto123.git
-    cd projeto123
+    git clone https://github.com/PedroVR20/projeto_faculdadeAnaliseDeDados.git
+    cd projeto_faculdadeAnaliseDeDados
     ```
 2.  Certifique-se de que o arquivo de dados (`clientes_contabilidade.xlsx`) esteja no mesmo diretório que o *script* `codigo.py`.
 3.  Execute o *script* Python:
