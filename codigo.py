@@ -108,57 +108,129 @@ if 'df' in locals() and df is not None:
         plt.title('Motivos de Contato Mais Frequentes', fontsize=16)
         plt.show()
 
-if 'df' in locals() and df is not None:
-    print("\n--- Gerando Gráfico 4 : Índice de Satisfação ---")
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
+# --- Configurações Iniciais ---
+file_path = '/home/ubuntu/upload/clientes_contabilidade.xlsx'
+plt.style.use('seaborn-v0_8-whitegrid') # Estilo mais limpo para o gráfico
 
-    indice_satisfacao = df.groupby('Segmento')['Nivel_Satisfacao (1-5)'].mean().sort_values()
-    fig, ax = plt.subplots(figsize=(12, 8))
-    cor_grafico = '#007ACC'
-    ax.hlines(
-        y=indice_satisfacao.index,
-        xmin=0,
-        xmax=indice_satisfacao.values,
-        color=cor_grafico,
-        linewidth=2.5
-    )
-    ax.scatter(
-        x=indice_satisfacao.values,
-        y=indice_satisfacao.index,
-        s=150,
-        color=cor_grafico
-    )
-    for i, valor in enumerate(indice_satisfacao):
-        ax.text(
-            valor + 0.04,
-            i,
-            f'{valor:.2f}',
-            va='center',
-            color='black',
-            fontsize=11,
-            fontweight='medium'
+# --- Função para gerar o gráfico ---
+def gerar_grafico_satisfacao_anual(file_path):
+    try:
+        # 1. Carregar os dados
+        df = pd.read_excel(file_path)
+    except FileNotFoundError:
+        print(f"Erro: O arquivo não foi encontrado em {file_path}")
+        return
+    except Exception as e:
+        print(f"Ocorreu um erro ao ler o arquivo: {e}")
+        return
+
+    # 2. Pré-processamento dos dados
+    # Converter a coluna de data para datetime e extrair o ano
+    df['Data_Inicio_Contrato'] = pd.to_datetime(df['Data_Inicio_Contrato'])
+    df['Ano'] = df['Data_Inicio_Contrato'].dt.year
+
+    # Filtrar para os anos de interesse (2023, 2024, 2025)
+    anos_interesse = [2023, 2024, 2025]
+    df_filtrado = df[df['Ano'].isin(anos_interesse)].copy()
+
+    # 3. Calcular a média de satisfação por Segmento e Ano
+    # O .unstack() transforma o nível 'Ano' em colunas, resultando em um DataFrame
+    df_satisfacao = df_filtrado.groupby(['Segmento', 'Ano'])['Nivel_Satisfacao (1-5)'].mean().unstack()
+
+    # 4. Preparação para o Gráfico de Barras Agrupadas
+    segmentos = df_satisfacao.index.tolist()
+    anos = df_satisfacao.columns.tolist()
+    
+    # Definir cores para os anos
+    cores = {
+        2023: '#1f77b4', # Azul
+        2024: '#ff7f0e', # Laranja
+        2025: '#2ca02c'  # Verde
+    }
+    
+    # Garantir que a ordem dos anos seja a correta para a iteração
+    anos_ordenados = [ano for ano in anos_interesse if ano in anos]
+
+    # 5. Criação do Gráfico
+    fig, ax = plt.subplots(figsize=(14, 8))
+    
+    # Largura das barras
+    bar_width = 0.25
+    
+    # Posições no eixo X para os grupos de segmentos
+    r = np.arange(len(segmentos))
+    
+    # Plotar as barras para cada ano
+    for i, ano in enumerate(anos_ordenados):
+        # Calcular a posição da barra
+        r_pos = r + i * bar_width
+        
+        # Plotar a barra
+        # Acessar a coluna do DataFrame df_satisfacao
+        barras = ax.bar(
+            r_pos, 
+            df_satisfacao[ano].fillna(0), # Usar 0 para segmentos sem dados no ano
+            color=cores[ano], 
+            width=bar_width, 
+            edgecolor='white', 
+            label=str(ano)
         )
-    ax.set_title('Ranking de Satisfação por Segmento', fontsize=20, loc='left', pad=25)
-    ax.set_xlabel('Média de Satisfação (de 2 a 5)', fontsize=12)
-    ax.set_ylabel('')
-    ax.tick_params(axis='y', length=0, labelsize=11)
+        
+        # Adicionar rótulos de valor no topo das barras
+        for bar in barras:
+            height = bar.get_height()
+            if height > 0:
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2., 
+                    height + 0.01, 
+                    f'{height:.2f}', 
+                    ha='center', 
+                    va='bottom',
+                    fontsize=9
+                )
 
-
-    min_lim = 2.0
-    max_lim = indice_satisfacao.max() + 0.1
-    ax.set_xlim(min_lim, max_lim)
-
-
-    for spine in ['top', 'right', 'left']:
-        ax.spines[spine].set_visible(False)
-    ax.spines['bottom'].set_color('#DDDDDD')
-    ax.grid(axis='x', linestyle='--', alpha=0.6)
-
+    # 6. Configurações do Gráfico
+    ax.set_title(
+        'Comparativo do Nível de Satisfação por Segmento (2023-2025)', 
+        fontsize=16, 
+        fontweight='bold', 
+        pad=20
+    )
+    ax.set_xlabel('Segmento de Atuação', fontsize=12)
+    ax.set_ylabel('Média de Satisfação (1-5)', fontsize=12)
+    
+    # Configurar os ticks do eixo X para ficarem centralizados
+    ax.set_xticks(r + bar_width * (len(anos_ordenados) - 1) / 2)
+    ax.set_xticklabels(segmentos, rotation=45, ha="right")
+    
+    # Limites do eixo Y
+    ax.set_ylim(0, 5.5)
+    
+    # Legenda
+    ax.legend(title='Ano', loc='upper left', bbox_to_anchor=(1, 1))
+    
+    # Remover bordas desnecessárias
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    
     plt.tight_layout()
+    
+    # Salvar o gráfico
+    output_path = '/home/ubuntu/grafico_satisfacao_anual.png'
+    plt.savefig(output_path)
+    print(f"\nGráfico salvo em: {output_path}")
+    
+    # Mostrar o gráfico
     plt.show()
 
-else:
-    print("ERRO: Os dados não foram carregados. Execute a Célula 1 primeiro.")
+# --- Execução ---
+if __name__ == '__main__':
+    gerar_grafico_satisfacao_anual(file_path)
+
 
 
     # CÉLULA BÔNUS 1: TOP 5 SERVIÇOS MAIS CONTRATADOS
