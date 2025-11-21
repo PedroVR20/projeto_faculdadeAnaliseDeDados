@@ -108,92 +108,80 @@ if 'df' in locals() and df is not None:
         plt.title('Motivos de Contato Mais Frequentes', fontsize=16)
         plt.show()
 
+
+plt.style.use('seaborn-v0_8-whitegrid') # Estilo mais limpo para o gráfico
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# --- Configurações Iniciais ---
-file_path = '/home/ubuntu/upload/clientes_contabilidade.xlsx'
-plt.style.use('seaborn-v0_8-whitegrid') # Estilo mais limpo para o gráfico
+# --- Código do Gráfico 4: Comparativo de Satisfação por Ano e Segmento ---
+# --- Código do Gráfico 4: Comparativo de Satisfação por Ano e Segmento ---
+if 'df' in locals() and df is not None:
+    print("\n--- Gerando Gráfico 4: Comparativo de Satisfação por Ano e Segmento ---")
 
-# --- Função para gerar o gráfico ---
-def gerar_grafico_satisfacao_anual(file_path):
-    try:
-        # 1. Carregar os dados
-        df = pd.read_excel(file_path)
-    except FileNotFoundError:
-        print(f"Erro: O arquivo não foi encontrado em {file_path}")
-        return
-    except Exception as e:
-        print(f"Ocorreu um erro ao ler o arquivo: {e}")
-        return
+    df_temp = df.copy()
 
-    # 2. Pré-processamento dos dados
-    # Converter a coluna de data para datetime e extrair o ano
-    df['Data_Inicio_Contrato'] = pd.to_datetime(df['Data_Inicio_Contrato'])
-    df['Ano'] = df['Data_Inicio_Contrato'].dt.year
+    # Conversão robusta (aceita formatos brasileiros e estrangeiros)
+    df_temp['Data_Inicio_Contrato'] = pd.to_datetime(
+        df_temp['Data_Inicio_Contrato'],
+        errors='coerce',
+        dayfirst=True   # <-- ESSA LINHA É A CHAVE DA CORREÇÃO
+    )
 
-    # Filtrar para os anos de interesse (2023, 2024, 2025)
+    # Extração segura do ano
+    df_temp['Ano'] = df_temp['Data_Inicio_Contrato'].dt.year
+
+    # Remove linhas sem ano
+    df_temp = df_temp.dropna(subset=['Ano'])
+    df_temp['Ano'] = df_temp['Ano'].astype('Int64')
+
+    # Filtrar anos de interesse
     anos_interesse = [2023, 2024, 2025]
-    df_filtrado = df[df['Ano'].isin(anos_interesse)].copy()
+    df_filtrado = df_temp[df_temp['Ano'].isin(anos_interesse)].copy()
 
-    # 3. Calcular a média de satisfação por Segmento e Ano
-    # O .unstack() transforma o nível 'Ano' em colunas, resultando em um DataFrame
+    # Média por segmento e ano
     df_satisfacao = df_filtrado.groupby(['Segmento', 'Ano'])['Nivel_Satisfacao (1-5)'].mean().unstack()
 
-    # 4. Preparação para o Gráfico de Barras Agrupadas
     segmentos = df_satisfacao.index.tolist()
     anos = df_satisfacao.columns.tolist()
-    
-    # Definir cores para os anos
+
     cores = {
-        2023: '#1f77b4', # Azul
-        2024: '#ff7f0e', # Laranja
-        2025: '#2ca02c'  # Verde
+        2023: '#1f77b4',
+        2024: '#ff7f0e',
+        2025: '#2ca02c'
     }
-    
-    # Garantir que a ordem dos anos seja a correta para a iteração
+
     anos_ordenados = [ano for ano in anos_interesse if ano in anos]
 
-    # 5. Criação do Gráfico
     fig, ax = plt.subplots(figsize=(14, 8))
-    
-    # Largura das barras
+
     bar_width = 0.25
-    
-    # Posições no eixo X para os grupos de segmentos
     r = np.arange(len(segmentos))
-    
-    # Plotar as barras para cada ano
+
     for i, ano in enumerate(anos_ordenados):
-        # Calcular a posição da barra
         r_pos = r + i * bar_width
-        
-        # Plotar a barra
-        # Acessar a coluna do DataFrame df_satisfacao
         barras = ax.bar(
-            r_pos, 
-            df_satisfacao[ano].fillna(0), # Usar 0 para segmentos sem dados no ano
-            color=cores[ano], 
-            width=bar_width, 
-            edgecolor='white', 
+            r_pos,
+            df_satisfacao[ano].fillna(0),
+            color=cores[ano],
+            width=bar_width,
+            edgecolor='white',
             label=str(ano)
         )
-        
-        # Adicionar rótulos de valor no topo das barras
+
         for bar in barras:
             height = bar.get_height()
             if height > 0:
                 ax.text(
-                    bar.get_x() + bar.get_width() / 2., 
-                    height + 0.01, 
-                    f'{height:.2f}', 
-                    ha='center', 
+                    bar.get_x() + bar.get_width() / 2.,
+                    height + 0.01,
+                    f'{height:.2f}',
+                    ha='center',
                     va='bottom',
                     fontsize=9
                 )
 
-    # 6. Configurações do Gráfico
     ax.set_title(
         'Comparativo do Nível de Satisfação por Segmento (2023-2025)', 
         fontsize=16, 
@@ -202,36 +190,18 @@ def gerar_grafico_satisfacao_anual(file_path):
     )
     ax.set_xlabel('Segmento de Atuação', fontsize=12)
     ax.set_ylabel('Média de Satisfação (1-5)', fontsize=12)
-    
-    # Configurar os ticks do eixo X para ficarem centralizados
+
     ax.set_xticks(r + bar_width * (len(anos_ordenados) - 1) / 2)
     ax.set_xticklabels(segmentos, rotation=45, ha="right")
-    
-    # Limites do eixo Y
+
     ax.set_ylim(0, 5.5)
-    
-    # Legenda
     ax.legend(title='Ano', loc='upper left', bbox_to_anchor=(1, 1))
-    
-    # Remover bordas desnecessárias
+
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    
+
     plt.tight_layout()
-    
-    # Salvar o gráfico
-    output_path = '/home/ubuntu/grafico_satisfacao_anual.png'
-    plt.savefig(output_path)
-    print(f"\nGráfico salvo em: {output_path}")
-    
-    # Mostrar o gráfico
     plt.show()
-
-# --- Execução ---
-if __name__ == '__main__':
-    gerar_grafico_satisfacao_anual(file_path)
-
-
 
     # CÉLULA BÔNUS 1: TOP 5 SERVIÇOS MAIS CONTRATADOS
 if 'df' in locals() and df is not None:
